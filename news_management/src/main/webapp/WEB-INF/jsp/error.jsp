@@ -7,7 +7,8 @@
 <fmt:setBundle basename="local" var="loc" />
 <fmt:message bundle="${loc}" key="command.name.backToNewsList"
 	var="backToNewsList_command" />
-
+<fmt:message bundle="${loc}" key="mess.name.commonerror"
+	var="message_error_common" />
 <!DOCTYPE html>
 <html>
 <head>
@@ -20,7 +21,7 @@
 		<c:import url="/WEB-INF/jsp/layers/header.jsp" />
 	</div>
 	<div style="width: 100%" class="info-message">
-		<p>УПС! Что-то пошло не так!</p>
+		<p><c:out value="${message_error_common}" /></p>
 	</div>
 	<div class="main-container">
 		<c:import url="/WEB-INF/jsp/layers/menu.jsp" />

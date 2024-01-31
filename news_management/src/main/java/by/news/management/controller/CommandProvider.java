@@ -15,6 +15,7 @@ import by.news.management.controller.impl.ShowNewsEditCommand;
 import by.news.management.controller.impl.ShowNewsListCommand;
 import by.news.management.controller.impl.ShowNewsViewCommand;
 import by.news.management.controller.impl.ShowRegistrationPageCommand;
+import by.news.management.controller.impl.ShowUsersPageCommand;
 import by.news.management.controller.impl.SignInCommand;
 import by.news.management.controller.impl.SignOutCommand;
 
@@ -40,6 +41,7 @@ public final class CommandProvider {
 		commands.put(CommandName.LOCAL, new ChangeLocalCommand());
 		commands.put(CommandName.SHOW_EDIT_NEWS, new ShowNewsEditCommand());
 		commands.put(CommandName.SHOW_ERROR, new ShowErrorPage());
+		commands.put(CommandName.SHOW_USERS_PAGE, new ShowUsersPageCommand());
 	}
 
 	public Command getCommand(String name)  {

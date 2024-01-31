@@ -23,11 +23,9 @@ public class EditNewsCommand implements Command {
 			newsService.editNews(news,Integer.parseInt(request.getSession(true).getAttribute("userId").toString()));
 			String id = request.getParameter("id");
 			String url = "Controller?command=show_news_view&id=" + id;
-
 			response.sendRedirect(url);
 		} catch (ServiceException e) {
 			response.sendRedirect("Controller?command=show_error");
-			e.printStackTrace();
 		}
 	}
 }

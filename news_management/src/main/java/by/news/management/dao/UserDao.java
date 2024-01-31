@@ -9,7 +9,8 @@ import by.news.management.dao.exceptions.UserNotFoundException;
 public interface UserDao {
 	void registration(User user) throws DAOException;
 	User signIn(String login, String password) throws DAOException,UserNotFoundException;
-	List<User> getListOfUsers(int quantity) throws DAOException;
+	List<User> getListOfUsers(int page) throws DAOException;
+	List<Integer> getListOfPages()throws DAOException;
 	User getByLogin(String login) throws DAOException;
 	User updateUser(User user) throws DAOException;
 	boolean deleteUser(User user) throws DAOException;

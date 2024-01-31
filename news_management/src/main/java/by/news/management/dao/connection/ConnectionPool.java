@@ -24,14 +24,17 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Executor;
 
 public final class ConnectionPool {
-	private static final ConnectionPool instance = new ConnectionPool();
+	private static ConnectionPool instance;
 
 	public static ConnectionPool getInstance() {
+		if (instance == null) {
+			instance = new ConnectionPool();
+		}
 		return instance;
 	}
 
 	private BlockingQueue<Connection> connectionQueue;
-	private BlockingQueue<Connection> givenAwayConnectionQueue;
+	private BlockingQueue<Connection> givenAwayConQueue;
 
 	private String driverName;
 	private String url;
@@ -39,14 +42,16 @@ public final class ConnectionPool {
 	private String password;
 	private int poolSize;
 
-	public ConnectionPool() {
+	private ConnectionPool() {
 		DBResourceManager dbResourceManager = DBResourceManager.getInstance();
 
 		this.driverName = dbResourceManager.getValue(DBParameter.DB_DRIVER);
 		this.url = dbResourceManager.getValue(DBParameter.DB_URL);
 		this.login = dbResourceManager.getValue(DBParameter.DB_LOGIN);
 		this.password = dbResourceManager.getValue(DBParameter.DB_PASSWORD);
+
 		this.poolSize = Integer.parseInt(dbResourceManager.getValue(DBParameter.DB_POOL_SIZE));
+
 	}
 
 	public void initPoolData() throws ConnectionPoolException {
@@ -54,17 +59,18 @@ public final class ConnectionPool {
 			Class.forName(driverName);
 
 			connectionQueue = new ArrayBlockingQueue<Connection>(poolSize);
-			givenAwayConnectionQueue = new ArrayBlockingQueue<Connection>(poolSize);
+			givenAwayConQueue = new ArrayBlockingQueue<Connection>(poolSize);
 
 			for (int i = 0; i < poolSize; i++) {
 				Connection connection = DriverManager.getConnection(url, login, password);
 				PooledConnection pooledConnection = new PooledConnection(connection);
 				connectionQueue.add(pooledConnection);
 			}
+
 		} catch (ClassNotFoundException e) {
-			throw new ConnectionPoolException("Error in process of loading database driver", e);
+			throw new ConnectionPoolException("Error loading database driver", e);
 		} catch (SQLException e) {
-			throw new ConnectionPoolException("SQLException in Connection pool", e);
+			throw new ConnectionPoolException("Error getting connection from pool", e);
 		}
 	}
 
@@ -77,11 +83,17 @@ public final class ConnectionPool {
 	}
 
 	private void clearConnectionQueue() throws ConnectionPoolException {
+		BlockingQueue<Connection> allConnectionsQueue = new ArrayBlockingQueue<>(poolSize);
+		allConnectionsQueue.addAll(connectionQueue);
+		allConnectionsQueue.addAll(givenAwayConQueue);
+
+		connectionQueue.clear();
+		givenAwayConQueue.clear();
+
 		try {
-			closeConnectionsQueue(givenAwayConnectionQueue);
-			closeConnectionsQueue(connectionQueue);
+			closeConnectionsQueue(allConnectionsQueue);
 		} catch (SQLException e) {
-			throw new ConnectionPoolException("Error while closing connection queue", e);
+			throw new ConnectionPoolException("Error closing connection queue", e);
 		}
 	}
 
@@ -89,63 +101,62 @@ public final class ConnectionPool {
 		Connection connection = null;
 		try {
 			connection = connectionQueue.take();
-			givenAwayConnectionQueue.add(connection);
+			givenAwayConQueue.add(connection);
 		} catch (InterruptedException e) {
-			throw new ConnectionPoolException("", e);
+			throw new ConnectionPoolException("Error receiving connection from connection queue", e);
 		}
 		return connection;
 	}
 
 	public void closeConnection(ResultSet rs, PreparedStatement st, Connection con) throws ConnectionPoolException {
-		boolean rsIsNotClosed = false;
-		boolean stIsNotClosed = false;
-		boolean conIsNotClosed = false;
-
+		String errorMessage = "";
 		try {
 			if (rs != null) {
 				rs.close();
 			}
 		} catch (SQLException e) {
-			rsIsNotClosed = true;
+			errorMessage += "Error closing result set ";
 		}
 		try {
 			if (st != null) {
 				st.close();
 			}
 		} catch (SQLException e) {
-			stIsNotClosed = true;
+			errorMessage += "Error closing prepared statement ";
 		}
 		try {
-			if (con != null) {
+			if (con != null && con.getClass() == PooledConnection.class) {
 				con.close();
 			}
 		} catch (SQLException e) {
-			conIsNotClosed = true;
+			errorMessage += "Error closing connection";
 		}
-		if (rsIsNotClosed == true || stIsNotClosed == true || conIsNotClosed == true) {
-			throw new ConnectionPoolException("Error closing");
+
+		if (!errorMessage.isEmpty()) {
+			throw new ConnectionPoolException(errorMessage);
 		}
 	}
 
 	public void closeConnection(PreparedStatement st, Connection con) throws ConnectionPoolException {
-		boolean stIsNotClosed = false;
-		boolean conIsNotClosed = false;
+		String errorMessage = "";
+
 		try {
 			if (st != null) {
 				st.close();
 			}
 		} catch (SQLException e) {
-			stIsNotClosed = true;
+			errorMessage += "Error closing prepared statement ";
 		}
 		try {
-			if (con != null) {
+			if (con != null && con.getClass() == PooledConnection.class) {
 				con.close();
 			}
 		} catch (SQLException e) {
-			conIsNotClosed = true;
+			errorMessage += "Error closing connection";
 		}
-		if (stIsNotClosed == true || conIsNotClosed == true) {
-			throw new ConnectionPoolException("Error closing");
+
+		if (!errorMessage.isEmpty()) {
+			throw new ConnectionPoolException(errorMessage);
 		}
 	}
 
@@ -180,16 +191,18 @@ public final class ConnectionPool {
 
 		public void close() throws SQLException {
 			if (connection.isClosed()) {
-				throw new SQLException("Error ");
+				throw new SQLException("Connection release error because the connection is closed");
 			}
 			if (connection.isReadOnly()) {
 				connection.setReadOnly(false);
 			}
-			if (!givenAwayConnectionQueue.remove(this)) {
-				throw new SQLException("Eror");
+			if (!givenAwayConQueue.remove(this)) {
+				throw new SQLException(
+						"Connection release error because there is no connection in the queue of given away connections");
 			}
 			if (!connectionQueue.offer(this)) {
-				throw new SQLException("Error");
+				throw new SQLException(
+						"Connection release error because the connection was not added to the connection queue");
 			}
 		}
 
@@ -405,5 +418,6 @@ public final class ConnectionPool {
 		public void setTypeMap(Map<String, Class<?>> map) throws SQLException {
 			connection.setTypeMap(map);
 		}
+
 	}
 }

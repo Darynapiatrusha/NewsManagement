@@ -17,7 +17,7 @@
 	var="registration_command" />
 	<fmt:message bundle="${loc}" key="command.name.authorization"
 	var="authorization_command" />
-<fmt:message bundle="${loc}" key="message.error.auth"
+<fmt:message bundle="${loc}" key="mess.name.errorauth"
 	var="message_error_auth" />
 <!DOCTYPE html>
 <html>
@@ -32,7 +32,7 @@
 	</div>
 	<c:if test="${not empty param.error_message}">
 		<div class="info-message">
-			<p>Ошибка при авторизации, попробуйте еще раз!</p>
+			<p><c:out value="${message_error_auth}" /></p>
 		</div>
 	</c:if>
 

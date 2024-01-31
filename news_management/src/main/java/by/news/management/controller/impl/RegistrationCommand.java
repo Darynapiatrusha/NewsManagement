@@ -26,7 +26,7 @@ public class RegistrationCommand implements Command {
 		String email = request.getParameter("email");
 		String password = request.getParameter("password");
 		Roles role = Roles.USER;
-		Status status = Status.ACTIVE;
+		String status = "ACTIVE";
 		
 		User user = new User(name, surname, login, email, password, role, status);
 		
@@ -41,8 +41,7 @@ public class RegistrationCommand implements Command {
 			response.sendRedirect("Controller?command=show_news_list&page=1&info_message=" + mes);
 
 		} catch (ServiceException e) {
-			response.sendRedirect("Controller?command=error_registration&error_message='errorWithRegistration'");
-			e.printStackTrace();
+			response.sendRedirect("Controller?command=error_registration&error_message=errorWithRegistration");
 		}
 	}
 }

@@ -28,7 +28,6 @@ public class SaveNewsCommand implements Command {
 			response.sendRedirect(url);
 		} catch (ServiceException e) {
 			response.sendRedirect("Controller?command=show_error");
-			e.printStackTrace();
 		}
 	}
 }

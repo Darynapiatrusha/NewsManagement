@@ -27,7 +27,7 @@
 				<c:when test="${sessionScope.userId != null}">
 					<div class="content-item-manage">
 						<p>
-							<a href="Controller?command=show_edit_news&id=${news.id}&edit=1"><c:out
+							<a href="Controller?command=show_edit_news&id=${news.id}&edit"><c:out
 									value="${edit_command}" /></a>
 						</p>
 						<p>

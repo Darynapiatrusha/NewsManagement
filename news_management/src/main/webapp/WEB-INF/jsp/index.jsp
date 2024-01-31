@@ -3,6 +3,11 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt"%>
 
+<fmt:setLocale value="${sessionScope.local}" />
+<fmt:setBundle basename="local" var="loc" />
+<fmt:message bundle="${loc}" key="mess.name.successs"
+	var="message_success" />
+	
 <!DOCTYPE html>
 <html>
 <head>
@@ -17,7 +22,7 @@
 
 	<c:if test="${not empty param.info_message}">
 		<div class="info-message">
-			<p>Регистрация прошла успешно!</p>
+			<p><c:out value="${message_success}" /></p>
 		</div>
 	</c:if>
 	<div class="main-container">

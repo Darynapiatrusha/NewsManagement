@@ -51,6 +51,7 @@ public class NewsServiceImpl implements NewsService {
 	public List<News> getListOfNews(int page) throws ServiceException {
 		try {
 			return NewsDao.getListOfNews(page);
+			
 		} catch (DAOException e) {
 			log.error("Error of get list of news process");
 			throw new ServiceException("News was not selecting from database", e);
@@ -61,6 +62,7 @@ public class NewsServiceImpl implements NewsService {
 	public News getById(int id) throws ServiceException {
 		try {
 			return NewsDao.getById(id);
+		
 		} catch (DAOException e) {
 			log.error("Error of get news by id process");
 			throw new ServiceException("News with this id was not found in database", e);

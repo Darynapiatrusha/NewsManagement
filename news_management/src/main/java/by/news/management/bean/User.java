@@ -12,14 +12,14 @@ public class User implements Serializable {
 	private String email;
 	private String password;
 	private Roles roles;
-	private Status status = Status.ACTIVE;
+	private String status;
 
 	public User() {
 		super();
 	}
 
 	public User(int id, String name, String surname, String login, String email, String password, Roles roles,
-			Status status) {
+			String status) {
 		super();
 		this.id = id;
 		this.name = name;
@@ -31,7 +31,17 @@ public class User implements Serializable {
 		this.status = status;
 	}
 
-	public User(String name, String surname, String login, String email, String password, Roles roles, Status status) {
+	public User(int id, String name, String surname, String login, String email, String status) {
+		super();
+		this.id = id;
+		this.name = name;
+		this.surname = surname;
+		this.login = login;
+		this.email = email;
+		this.status = status;
+	}
+
+	public User(String name, String surname, String login, String email, String password, Roles roles, String status) {
 		super();
 		this.name = name;
 		this.surname = surname;
@@ -127,11 +137,11 @@ public class User implements Serializable {
 		this.roles = roles;
 	}
 
-	public Status getStatus() {
+	public String getStatus() {
 		return status;
 	}
 
-	public void setStatus(Status status) {
+	public void setStatus(String status) {
 		this.status = status;
 	}
 
@@ -151,7 +161,7 @@ public class User implements Serializable {
 		User other = (User) obj;
 		return Objects.equals(email, other.email) && id == other.id && Objects.equals(login, other.login)
 				&& Objects.equals(name, other.name) && Objects.equals(password, other.password) && roles == other.roles
-				&& status == other.status && Objects.equals(surname, other.surname);
+				&& Objects.equals(status, other.status) && Objects.equals(surname, other.surname);
 	}
 
 	@Override
@@ -159,4 +169,5 @@ public class User implements Serializable {
 		return "User [id=" + id + ", name=" + name + ", surname=" + surname + ", login=" + login + ", email=" + email
 				+ ", password=" + password + ", roles=" + roles + ", status=" + status + "]";
 	}
+
 }

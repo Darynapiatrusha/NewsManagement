@@ -19,12 +19,11 @@ public class DeleteNewsCommand implements Command {
 			int id = Integer.parseInt(request.getParameter("id"));
 			newsService.deleteNews(id);
 
-			String url = "Controller?command=show_news_list";
+			String url = "Controller?command=show_news_list&page=1";
 			response.sendRedirect(url);
 			
 		} catch (ServiceException e) {
 			response.sendRedirect("Controller?command=show_error");
-			e.printStackTrace();
 		}
 	}
 }

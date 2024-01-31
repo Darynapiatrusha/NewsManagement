@@ -24,7 +24,6 @@ public class ShowNewsViewCommand implements Command {
 			request.getRequestDispatcher("WEB-INF/jsp/news.jsp").forward(request, response);
 		} catch (ServiceException e) {
 			response.sendRedirect("Controller?command=show_error");
-			e.printStackTrace();
 		}
 	}
 }

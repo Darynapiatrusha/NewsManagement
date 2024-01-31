@@ -64,7 +64,7 @@
 }
 
 .navigation {
-	background: #f0f2f9;
+	background:  rgb(234, 236, 247, 0.70);
 	flex: 0 0 20em;
 	align-self: baseline;
 	margin: 5px;
@@ -74,15 +74,8 @@
 	text-align: center;
 }
 
-.navigatinon-content {
-	background: white;
-	float: right;
-	margin: 5px;
-
-}
 
 .navigatinon-content p {
-	text-align: right;
 	margin-right: 50px;
 	margin-left: 50px;
 }

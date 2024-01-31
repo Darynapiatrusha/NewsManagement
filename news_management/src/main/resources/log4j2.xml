@@ -1,7 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <configuration name="ConfigTest" status="ERROR"
 	monitorInterval="5">
 	<Properties>
-		<Property name="filename">logs/log.log</Property>
+		<Property name="filename">log.log</Property>
 		<Property name="basePatterLayout"> %m </Property>
 	</Properties>
 	
@@ -10,15 +11,11 @@
 		<patternLayout pattern= "${basePatterLayout}" />
  		</console>
 	</appenders>
-	
-	<logger name="by.news.management.dao" level="error">
-			<appender-ref ref="out" />
-		</logger>
 		
 	<loggers>
-		<root level="error">
-			<appenderRef ref="out" />
-		</root>
+		<Root level="error">
+            <appenderRef ref="out"/>
+        </Root>
 	</loggers>
 
 </configuration>

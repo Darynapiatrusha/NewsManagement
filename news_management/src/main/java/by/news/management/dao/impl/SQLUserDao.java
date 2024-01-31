@@ -35,10 +35,11 @@ public class SQLUserDao implements UserDao {
 	private final String SELECT_ID_FROM_ROLES = "SELECT id FROM roles WHERE title = ?";
 	private final String INSERT_INTO_USERS_HAS_ROLES = "INSERT INTO users_has_roles (Users_id,roles_id) VALUES (?,?)";
 	private final String SELECT_USER_BY_LOGIN = "SELECT * FROM users WHERE login = ? AND status = ?";
-	private final String SELECT_LIST_OF_USERS = "SELECT * FROM users WHERE status = ? LIMIT ?";
+	private final String SELECT_LIST_OF_USERS = "SELECT * FROM users LIMIT ? OFFSET ?";
 	private final String UPDATE_USER = "UPDATE users SET name = ?, surname = ?, email = ?, password = ? WHERE login = ?";
 	private final String DELETE_USER = "UPDATE users SET status = ? WHERE login = ?";
 	private final String BLOCK_USER = "UPDATE users SET status = ? WHERE id = ?";
+	private final String SELECT_NUMBER_OF_USERS = "SELECT COUNT(*) FROM users";
 
 	private final ConnectionPool connectionPool = ConnectionPool.getInstance();
 
@@ -78,29 +79,29 @@ public class SQLUserDao implements UserDao {
 
 	@Override
 	public User signIn(String login, String password) throws DAOException, UserNotFoundException {
-		ResultSet resultSet = null;
 		User user = new User();
 		try (Connection connection = connectionPool.takeConnection();
 				PreparedStatement preparedStatement = connection.prepareStatement(SELECT_USER_BY_LOGIN)) {
 
 			preparedStatement.setString(1, login);
 			preparedStatement.setString(2, "active");
-			resultSet = preparedStatement.executeQuery();
-			if (!resultSet.next()) {
-				log.error("ERROR");
-				throw new UserNotFoundException("User is not exist");
-			}
+			try (ResultSet resultSet = preparedStatement.executeQuery()) {
+				if (!resultSet.next()) {
+					log.error("ERROR");
+					throw new UserNotFoundException("User is not exist");
+				}
 
-			if (!PasswordSecurity.passwordCheck(password, resultSet.getString(6))) {
-				throw new DAOException("Wrong password");
+				if (!PasswordSecurity.passwordCheck(password, resultSet.getString(6))) {
+					throw new DAOException("Wrong password");
+				}
+				user = new User(resultSet.getInt(COLUMN_ID), resultSet.getString(COLUMN_NAME),
+						resultSet.getString(COLUMN_SURNAME));
+
+				int id = getRolesId(user.getId(), connection);
+				user.setRoles(getUserRolesById(id, connection));
+
+				return user;
 			}
-			user = new User(resultSet.getInt(COLUMN_ID), resultSet.getString(COLUMN_NAME),
-					resultSet.getString(COLUMN_SURNAME));
-			
-			int id = getRolesId(user.getId(), connection);
-			user.setRoles(getUserRolesById(id, connection));
-			
-			return user;
 		} catch (SQLException | ConnectionPoolException e) {
 			log.error("ERROR", e);
 			throw new DAOException("Authentication error", e);
@@ -108,41 +109,50 @@ public class SQLUserDao implements UserDao {
 	}
 
 	@Override
-	public List<User> getListOfUsers(int quantity) throws DAOException {
-		ResultSet resultSet = null;
+	public List<User> getListOfUsers(int page) throws DAOException {
+		int offset;
+		if (page != 1) {
+			offset = (page - 1) * 10;
+		} else {
+			offset = 0;
+		}
 		try (PreparedStatement preparedStatement = connectionPool.takeConnection()
 				.prepareStatement(SELECT_LIST_OF_USERS)) {
-			List<User> userList = new ArrayList<>();
-			preparedStatement.setString(1, "active");
-			preparedStatement.setInt(2, quantity);
-
-			resultSet = preparedStatement.executeQuery();
-			while (resultSet.next()) {
-				userList.add(new User(resultSet.getInt(COLUMN_ID), resultSet.getString(COLUMN_NAME),
-						resultSet.getString(COLUMN_SURNAME)));
+			preparedStatement.setInt(1, 10);
+			preparedStatement.setInt(2, offset);
+			try (ResultSet resultSet = preparedStatement.executeQuery()) {
+				if (!resultSet.next()) {
+					log.error("Error");
+					throw new DAOException("Users in range was not found");
+				}
+				List<User> userList = new ArrayList<>();
+				do {
+					userList.add(new User(resultSet.getInt(COLUMN_ID), resultSet.getString(COLUMN_NAME),
+							resultSet.getString(COLUMN_SURNAME), resultSet.getString(COLUMN_LOGIN),
+							resultSet.getString(COLUMN_EMAIL), resultSet.getString(COLUMN_STATUS)));
+				} while (resultSet.next());
+				return userList;
 			}
-			return userList;
 		} catch (SQLException | ConnectionPoolException e) {
 			log.error("ERROR", e);
-			throw new DAOException("Error of getListOfNEws process", e);
+			throw new DAOException("Error of getListOfUsers process", e);
 		}
 	}
 
 	@Override
 	public User getByLogin(String login) throws DAOException {
-		ResultSet resultSet = null;
 		try (PreparedStatement preparedStatement = connectionPool.takeConnection()
 				.prepareStatement(SELECT_USER_BY_LOGIN)) {
 			preparedStatement.setString(1, login);
-
-			resultSet = preparedStatement.executeQuery();
-			if (!resultSet.next()) {
-				log.error("ERROR");
-				throw new DAOException("User is not exist");
+			try (ResultSet resultSet = preparedStatement.executeQuery()) {
+				if (!resultSet.next()) {
+					log.error("ERROR");
+					throw new DAOException("User is not exist");
+				}
+				User user = new User(resultSet.getInt(COLUMN_ID), resultSet.getString(COLUMN_NAME),
+						resultSet.getString(COLUMN_SURNAME), resultSet.getString(COLUMN_EMAIL));
+				return user;
 			}
-			User user = new User(resultSet.getInt(COLUMN_ID), resultSet.getString(COLUMN_NAME),
-					resultSet.getString(COLUMN_SURNAME), resultSet.getString(COLUMN_EMAIL));
-			return user;
 		} catch (SQLException | ConnectionPoolException e) {
 			log.error("ERROR", e);
 			throw new DAOException("User was not found", e);
@@ -205,6 +215,38 @@ public class SQLUserDao implements UserDao {
 		} catch (SQLException | ConnectionPoolException e) {
 			log.error("ERROR", e);
 			throw new DAOException("Error in process of block user", e);
+		}
+	}
+
+	@Override
+	public List<Integer> getListOfPages() throws DAOException {
+		try (PreparedStatement preparedStatement = connectionPool.takeConnection()
+				.prepareStatement(SELECT_NUMBER_OF_USERS)) {
+			try (ResultSet resultSet = preparedStatement.executeQuery()) {
+
+				if (!resultSet.next()) {
+					log.error("Error in method getListOfPages()");
+					throw new DAOException("News in range was not found");
+				}
+				int countOfUsers = resultSet.getInt(1);
+
+				List<Integer> pages = new ArrayList<Integer>();
+				int numberOfPages;
+
+				if (countOfUsers % 10 == 0) {
+					numberOfPages = countOfUsers / 10;
+				} else {
+					numberOfPages = countOfUsers / 10 + 1;
+				}
+
+				for (int i = 1; i <= numberOfPages; i++) {
+					pages.add(i);
+				}
+				return pages;
+			}
+		} catch (SQLException | ConnectionPoolException e) {
+			log.error("ERROR", e);
+			throw new DAOException("Error in method getListOfPages", e);
 		}
 	}
 

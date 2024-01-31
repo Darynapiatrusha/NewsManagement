@@ -16,7 +16,6 @@ import jakarta.servlet.http.HttpSession;
 public class SecurityFilterAdmin implements Filter {
 
 	public void init(FilterConfig config) throws ServletException {
-		System.out.println("init");
 	}
 
 	@Override
@@ -49,6 +48,5 @@ public class SecurityFilterAdmin implements Filter {
 	}
 
 	public void destroy() {
-		System.out.println("destroy");
 	}
 }

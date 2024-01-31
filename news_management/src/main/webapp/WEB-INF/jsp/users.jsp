@@ -19,17 +19,7 @@
 	</div>
 	<div class="main-container">
 		<c:import url="/WEB-INF/jsp/layers/menu.jsp" />
-		<c:choose>
-			<c:when test="${param.edit !=null && param.command eq 'show_edit_news'}">
-				<c:import url="/WEB-INF/jsp/layers/news_edit.jsp" />
-			</c:when>
-			<c:when test="${param.add !=null && param.command eq 'create_news'}">
-				<c:import url="/WEB-INF/jsp/layers/news_add.jsp" />
-			</c:when>
-			<c:otherwise>
-				<c:import url="/WEB-INF/jsp/layers/news_content.jsp" />
-			</c:otherwise>
-		</c:choose>
+		<c:import url="/WEB-INF/jsp/layers/users_content.jsp" />
 	</div>
 	<style>
 .main-container {

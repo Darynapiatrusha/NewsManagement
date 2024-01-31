@@ -16,6 +16,8 @@
 	var="registration_command" />
 <fmt:message bundle="${loc}" key="command.name.authorization"
 	var="authorization_command" />
+<fmt:message bundle="${loc}" key="command.name.listofusers"
+	var="list_of_users" />	
 
 <c:choose>
 	<c:when test="${sessionScope.userId != null}">
@@ -29,6 +31,9 @@
 				</p>
 				<p>
 					<a href="Controller?command=create_news&add=1"><c:out value="${addNews_command}"/></a>
+				</p>
+				<p>
+					<a href="Controller?command=show_users_page&page=1"><c:out value="${list_of_users}"/></a>
 				</p>
 			</div>
 		</div>

@@ -27,7 +27,7 @@
 	<c:choose>
 		<c:when test="${sessionScope.userId != null}">
 		<p>
-			<a href="Controller?command=show_edit_news&id=${param.id}&edit=1" ><c:out value="${edit_command}" /></a>
+			<a href="Controller?command=show_edit_news&id=${param.id}&edit" ><c:out value="${edit_command}" /></a>
 			</p>
 		<p>
 				<a href="Controller?command=delete_news&id=${param.id}" ><c:out value="${delete_command}" /></a>
